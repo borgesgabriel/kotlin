@@ -1,5 +1,10 @@
 class Klass {
-    fun unused() {
+    fun unusedFun() {
+    }
+
+    @SuppressWarnings("unused")
+    fun unusedNoWarn() {
+
     }
 }
 

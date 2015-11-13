@@ -3,6 +3,9 @@ class Klass {
         fun f() {
         }
 
+        @SuppressWarnings("unused")
+        fun fNoWarn() {}
+
         val p = 5
     }
 
@@ -15,6 +18,9 @@ class Klass {
     private fun localObject2() = object {
         fun f() {
         }
+
+        @SuppressWarnings("unused")
+        fun fNoWarn() {}
 
         val p = 5
     }
