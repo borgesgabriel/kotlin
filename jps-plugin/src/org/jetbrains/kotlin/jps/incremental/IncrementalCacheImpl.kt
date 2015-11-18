@@ -174,7 +174,7 @@ public class IncrementalCacheImpl(
                 val isPackage = true
 
                 protoMap.process(kotlinClass, isPackage) +
-                constantsMap.process(kotlinClass) +
+                constantsMap.process(kotlinClass, isPackage) +
                 inlineFunctionsMap.process(kotlinClass, isPackage)
             }
             header.isCompatibleMultifileClassKind() -> {
@@ -182,9 +182,11 @@ public class IncrementalCacheImpl(
                                 ?: throw AssertionError("Multifile class has no parts: ${kotlinClass.className}")
                 multifileClassFacadeMap.add(className, partNames)
 
+                val isPackage = true
+
                 // TODO NO_CHANGES? (delegates only, see package facade)
-                constantsMap.process(kotlinClass) +
-                inlineFunctionsMap.process(kotlinClass, isPackage = true)
+                constantsMap.process(kotlinClass, isPackage) +
+                inlineFunctionsMap.process(kotlinClass, isPackage)
             }
             header.isCompatibleMultifileClassPartKind() -> {
                 assert(sourceFiles.size() == 1) { "Multifile class part from several source files: $sourceFiles" }
@@ -194,14 +196,14 @@ public class IncrementalCacheImpl(
                 val isPackage = true
 
                 protoMap.process(kotlinClass, isPackage) +
-                constantsMap.process(kotlinClass) +
+                constantsMap.process(kotlinClass, isPackage) +
                 inlineFunctionsMap.process(kotlinClass, isPackage)
             }
             header.isCompatibleClassKind() && !header.isLocalClass -> {
                 val isPackage = false
 
                 protoMap.process(kotlinClass, isPackage) +
-                constantsMap.process(kotlinClass) +
+                constantsMap.process(kotlinClass, isPackage) +
                 inlineFunctionsMap.process(kotlinClass, isPackage)
             }
             else -> CompilationResult.NO_CHANGES
@@ -408,12 +410,12 @@ public class IncrementalCacheImpl(
         fun contains(className: JvmClassName): Boolean =
                 className.internalName in storage
 
-        public fun process(kotlinClass: LocalFileKotlinClass): CompilationResult {
-            return put(kotlinClass.className, getConstantsMap(kotlinClass.fileContents))
+        public fun process(kotlinClass: LocalFileKotlinClass, isPackage: Boolean): CompilationResult {
+            return put(kotlinClass.className, getConstantsMap(kotlinClass.fileContents), isPackage)
         }
 
-        private fun put(className: JvmClassName, constantsMap: Map<String, Any>?): CompilationResult {
-            val key = className.getInternalName()
+        private fun put(className: JvmClassName, constantsMap: Map<String, Any>?, isPackage: Boolean): CompilationResult {
+            val key = className.internalName
 
             val oldMap = storage[key]
             if (oldMap == constantsMap) return CompilationResult.NO_CHANGES
@@ -425,11 +427,23 @@ public class IncrementalCacheImpl(
                 storage.remove(key)
             }
 
-            return CompilationResult(constantsChanged = true)
+            val changes =
+                    if (IncrementalCompilation.isExperimental()) {
+                        val changedNames = ((oldMap?.entries ?: emptySet()) - (constantsMap?.entries ?: emptySet())).map { it.key }
+
+                        val fqName = if (isPackage) className.packageFqName else className.fqNameForClassNameWithoutDollars
+
+                        sequenceOf(ChangeInfo.MembersChanged(fqName, changedNames))
+                    }
+                    else {
+                        emptySequence<ChangeInfo>()
+                    }
+
+            return CompilationResult(constantsChanged = true, changes = changes)
         }
 
         public fun remove(className: JvmClassName) {
-            put(className, null)
+            storage.remove(className.internalName)
         }
 
         override fun dumpValue(value: Map<String, Any>): String =
