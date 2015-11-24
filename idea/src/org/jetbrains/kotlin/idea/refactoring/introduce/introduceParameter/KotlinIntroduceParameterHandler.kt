@@ -62,7 +62,6 @@ import org.jetbrains.kotlin.types.typeUtil.isNothing
 import org.jetbrains.kotlin.types.typeUtil.isUnit
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import java.util.*
-import kotlin.test.fail
 
 public data class IntroduceParameterDescriptor(
         val originalRange: KotlinPsiRange,
@@ -351,7 +350,7 @@ public open class KotlinIntroduceParameterHandler(
     }
 
     override fun invoke(project: Project, elements: Array<out PsiElement>, dataContext: DataContext?) {
-        fail("$INTRODUCE_PARAMETER can only be invoked from editor")
+        throw AssertionError("$INTRODUCE_PARAMETER can only be invoked from editor")
     }
 }
 

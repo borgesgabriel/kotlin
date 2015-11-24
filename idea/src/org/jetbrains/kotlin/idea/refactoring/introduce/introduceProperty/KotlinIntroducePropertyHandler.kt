@@ -25,7 +25,6 @@ import org.jetbrains.kotlin.idea.refactoring.introduce.*
 import org.jetbrains.kotlin.idea.refactoring.*
 import org.jetbrains.kotlin.idea.refactoring.introduce.extractionEngine.*
 import org.jetbrains.kotlin.idea.util.psi.patternMatching.*
-import kotlin.test.*
 import com.intellij.openapi.application.*
 import org.jetbrains.kotlin.idea.core.refactoring.getExtractionContainers
 import java.util.*
@@ -109,7 +108,7 @@ public class KotlinIntroducePropertyHandler(
     }
 
     override fun invoke(project: Project, elements: Array<out PsiElement>, dataContext: DataContext?) {
-        fail("$INTRODUCE_PROPERTY can only be invoked from editor")
+        throw AssertionError("$INTRODUCE_PROPERTY can only be invoked from editor")
     }
 }
 

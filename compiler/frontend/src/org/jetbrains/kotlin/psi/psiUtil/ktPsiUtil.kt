@@ -225,7 +225,7 @@ public fun StubBasedPsiElementBase<out KotlinClassOrObjectStub<out KtClassOrObje
         }
     }
 
-    assertTrue(this is KtClassOrObject)
+    require(this is KtClassOrObject) { "it should be ${KtClassOrObject::class} but it is a ${this.javaClass.name}" }
 
     val stub = getStub()
     if (stub != null) {
