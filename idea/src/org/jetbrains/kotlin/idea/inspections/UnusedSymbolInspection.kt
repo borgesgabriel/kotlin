@@ -38,6 +38,7 @@ import com.intellij.refactoring.safeDelete.SafeDeleteHandler
 import com.intellij.util.Processor
 import org.jetbrains.kotlin.asJava.LightClassUtil
 import org.jetbrains.kotlin.asJava.toLightClass
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.Annotated
 import org.jetbrains.kotlin.idea.KotlinBundle
 import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
@@ -53,6 +54,7 @@ import org.jetbrains.kotlin.psi.psiUtil.getNonStrictParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.isAncestor
 import org.jetbrains.kotlin.resolve.DescriptorUtils
+import org.jetbrains.kotlin.resolve.constants.ArrayValue
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import org.jetbrains.kotlin.utils.singletonOrEmptyList
 import java.awt.GridBagConstraints
@@ -63,7 +65,7 @@ import javax.swing.JPanel
 
 public class UnusedSymbolInspection : AbstractKotlinInspection() {
     companion object {
-        private val SUPPRESS_WARNINGS_FQNAME = FqName(SuppressWarnings::class.qualifiedName!!)
+        private val SUPPRESS_ANNOTATION_FQNAME = FqName(Suppress::class.qualifiedName!!)
         
         private val javaInspection = UnusedDeclarationInspection()
 
@@ -167,14 +169,8 @@ public class UnusedSymbolInspection : AbstractKotlinInspection() {
                 if (isCompanionObject && (declaration as KtObjectDeclaration).hasSerializationImplicitlyUsedField()) return
                 // properties can be referred by component1/component2, which is too expensive to search, don't mark them as unused
                 if (declaration is KtParameter && declaration.dataClassComponentFunction() != null) return
-                
-                val annotation = descriptor.annotations.findAnnotation(SUPPRESS_WARNINGS_FQNAME)
-                if (annotation != null) {
-                    val suppressedStrings = annotation.getAllValueArguments().values.singleOrNull()
-                    if (suppressedStrings is org.jetbrains.kotlin.resolve.constants.ArrayValue) {
-                        if (suppressedStrings.value.any { it.value == "unused" }) return
-                    }
-                }
+
+                if (isSuppressedWithAnnotation(descriptor, SUPPRESS_ANNOTATION_FQNAME)) return
 
                 // Main checks: finding reference usages && text usages
                 if (hasNonTrivialUsages(declaration)) return
@@ -197,6 +193,17 @@ public class UnusedSymbolInspection : AbstractKotlinInspection() {
                 )
 
                 holder.registerProblem(problemDescriptor)
+            }
+
+            private fun isSuppressedWithAnnotation(descriptor: DeclarationDescriptor, fqName: FqName): Boolean {
+                val annotation = descriptor.annotations.findAnnotation(fqName)
+                if (annotation != null) {
+                    val suppressedStrings = annotation.getAllValueArguments().values.singleOrNull()
+                    if (suppressedStrings is ArrayValue) {
+                        if (suppressedStrings.value.any { it.value == "unused" }) return true
+                    }
+                }
+                return false
             }
         }
     }

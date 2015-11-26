@@ -3,7 +3,7 @@ fun outer() {
 
     }
 
-    @SuppressWarnings("unused")
+    @Suppress("unused")
     fun localNoWarn() {
 
     }

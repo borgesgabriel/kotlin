@@ -2,5 +2,5 @@ fun unusedFun() {
 
 }
 
-@SuppressWarnings("unused")
+@Suppress("unused")
 fun unusedNoWarn() {}

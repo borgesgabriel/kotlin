@@ -7,5 +7,5 @@ fun onlyInImport() {
 
 }
 
-@SuppressWarnings("unused")
+@Suppress("unused")
 fun onlyInImportNoWarn() {}

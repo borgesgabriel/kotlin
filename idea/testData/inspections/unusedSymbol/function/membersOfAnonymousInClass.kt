@@ -3,7 +3,7 @@ class Klass {
         fun f() {
         }
 
-        @SuppressWarnings("unused")
+        @Suppress("unused")
         fun fNoWarn() {}
 
         val p = 5
@@ -19,7 +19,7 @@ class Klass {
         fun f() {
         }
 
-        @SuppressWarnings("unused")
+        @Suppress("unused")
         fun fNoWarn() {}
 
         val p = 5

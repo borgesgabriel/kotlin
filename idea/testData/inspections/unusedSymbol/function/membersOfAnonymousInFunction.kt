@@ -14,7 +14,7 @@ fun main(args: Array<String>) {
         fun f() {
         }
 
-        @SuppressWarnings("unused")
+        @Suppress("unused")
         fun fNoWarn() {}
 
         val p = 5

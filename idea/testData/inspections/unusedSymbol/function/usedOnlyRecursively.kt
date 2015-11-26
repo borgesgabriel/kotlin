@@ -2,7 +2,7 @@ fun usedOnlyRecursively() {
     usedOnlyRecursively()
 }
 
-@SuppressWarnings("unused")
+@Suppress("unused")
 fun usedOnlyRecursivelyNoWarn() {
     usedOnlyRecursivelyNoWarn()
 }
