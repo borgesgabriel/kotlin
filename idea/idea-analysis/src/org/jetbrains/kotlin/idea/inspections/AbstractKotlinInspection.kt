@@ -16,12 +16,9 @@
 
 package org.jetbrains.kotlin.idea.inspections
 
-import com.intellij.codeInspection.LocalInspectionTool
-import com.intellij.codeInspection.CustomSuppressableInspectionTool
 import com.intellij.psi.PsiElement
 import com.intellij.codeInsight.daemon.HighlightDisplayKey
-import com.intellij.codeInspection.SuppressIntentionAction
-import com.intellij.codeInspection.SuppressManager
+import com.intellij.codeInspection.*
 
 public abstract class AbstractKotlinInspection: LocalInspectionTool(), CustomSuppressableInspectionTool {
     public override fun getSuppressActions(element: PsiElement?): Array<SuppressIntentionAction>? {
