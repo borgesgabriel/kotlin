@@ -36,7 +36,7 @@ public class DiagnosticsWithSuppression implements Diagnostics {
 
     public DiagnosticsWithSuppression(@NotNull BindingContext context, @NotNull Collection<Diagnostic> diagnostics) {
         this.diagnostics = diagnostics;
-        this.suppressionManager = new SuppressionManager(context);
+        this.suppressionManager = new BindingContextSuppressionManager(context);
         this.elementsCache = new DiagnosticsElementsCache(this, suppressionManager.getFilter());
     }
 
