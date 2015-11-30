@@ -20,6 +20,11 @@ fun main(args: Array<String>) {
         val p = 5
     }
 
+    @Suppress("unused")
+    fun localObject3() = object {
+        fun fNoWarn() {}
+    }
+
     localObject2().f()
     localObject2().p
 

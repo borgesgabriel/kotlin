@@ -8,3 +8,10 @@ fun outer() {
 
     }
 }
+
+@Suppress("unused")
+fun otherFun() {
+    fun localNoWarn() {
+
+    }
+}

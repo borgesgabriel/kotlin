@@ -25,6 +25,15 @@ class Klass {
         val p = 5
     }
 
+    fun localObject3() = @Suppress("unused") object {
+        fun fNoWarn() {}
+    }
+
+    @Suppress("unused")
+    private val localObject4 = object {
+        fun fNoWarn() {}
+    }
+
     init {
         localObject2().f()
         localObject2().p
@@ -45,5 +54,5 @@ class Klass {
 }
 
 fun main(args: Array<String>) {
-    Klass()
+    Klass().localObject3()
 }
