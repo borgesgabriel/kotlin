@@ -158,7 +158,7 @@ public class FunctionCodegen {
         JvmMethodSignature jvmSignature = typeMapper.mapSignature(functionDescriptor, contextKind);
         Method asmMethod = jvmSignature.getAsmMethod();
 
-        int flags = getMethodAsmFlags(functionDescriptor, contextKind);
+        int flags = strategy.getMethodFlags(functionDescriptor, contextKind);
         boolean isNative = NativeKt.hasNativeAnnotation(functionDescriptor);
 
         if (isNative && owner instanceof DelegatingFacadeContext) {

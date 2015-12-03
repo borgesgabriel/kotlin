@@ -19,10 +19,12 @@ package org.jetbrains.kotlin.codegen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.codegen.context.MethodContext;
 import org.jetbrains.kotlin.codegen.state.GenerationState;
-import org.jetbrains.kotlin.descriptors.CallableDescriptor;
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor;
 import org.jetbrains.kotlin.psi.KtDeclarationWithBody;
 import org.jetbrains.kotlin.resolve.jvm.jvmSignature.JvmMethodSignature;
 import org.jetbrains.org.objectweb.asm.MethodVisitor;
+
+import static org.jetbrains.kotlin.codegen.AsmUtil.getMethodAsmFlags;
 
 public abstract class FunctionGenerationStrategy {
     public abstract void generateBody(
@@ -33,12 +35,16 @@ public abstract class FunctionGenerationStrategy {
             @NotNull MemberCodegen<?> parentCodegen
     );
 
-    public static class FunctionDefault extends CodegenBased<CallableDescriptor> {
+    protected int getMethodFlags(@NotNull FunctionDescriptor descriptor, @NotNull OwnerKind contextKind) {
+        return getMethodAsmFlags(descriptor, contextKind);
+    }
+
+    public static class FunctionDefault extends CodegenBased<FunctionDescriptor> {
         private final KtDeclarationWithBody declaration;
 
         public FunctionDefault(
                 @NotNull GenerationState state,
-                @NotNull CallableDescriptor descriptor,
+                @NotNull FunctionDescriptor descriptor,
                 @NotNull KtDeclarationWithBody declaration
         ) {
             super(state, descriptor);
@@ -51,7 +57,7 @@ public abstract class FunctionGenerationStrategy {
         }
     }
 
-    public abstract static class CodegenBased<T extends CallableDescriptor> extends FunctionGenerationStrategy {
+    public abstract static class CodegenBased<T extends FunctionDescriptor> extends FunctionGenerationStrategy {
         protected final GenerationState state;
         protected final T callableDescriptor;
 

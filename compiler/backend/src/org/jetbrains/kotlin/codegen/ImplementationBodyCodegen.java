@@ -1346,6 +1346,11 @@ public class ImplementationBodyCodegen extends ClassBodyCodegen {
                 inheritedFun,
                 new FunctionGenerationStrategy.CodegenBased<FunctionDescriptor>(state, inheritedFun) {
                     @Override
+                    protected int getMethodFlags(@NotNull FunctionDescriptor descriptor, @NotNull OwnerKind contextKind) {
+                        return super.getMethodFlags(descriptor, contextKind) | ACC_SYNTHETIC;
+                    }
+
+                    @Override
                     public void doGenerateBody(@NotNull ExpressionCodegen codegen, @NotNull JvmMethodSignature signature) {
                         DeclarationDescriptor containingDeclaration = traitFun.getContainingDeclaration();
                         if (!DescriptorUtils.isInterface(containingDeclaration)) return;
