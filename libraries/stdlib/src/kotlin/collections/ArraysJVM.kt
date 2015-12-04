@@ -11,47 +11,56 @@ import kotlin.jvm.internal.Intrinsic
 /**
  * Returns an array containing the specified elements.
  */
+@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
 @Intrinsic("kotlin.arrays.array") public fun <reified T> arrayOf(vararg elements: T) : Array<T> = elements as Array<T>
 
 // "constructors" for primitive types array
 /**
  * Returns an array containing the specified [Double] numbers.
  */
+@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
 @Intrinsic("kotlin.arrays.array") public fun doubleArrayOf(vararg elements: Double) : DoubleArray    = elements
 
 /**
  * Returns an array containing the specified [Float] numbers.
  */
+@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
 @Intrinsic("kotlin.arrays.array") public fun floatArrayOf(vararg elements: Float) : FloatArray       = elements
 
 /**
  * Returns an array containing the specified [Long] numbers.
  */
+@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
 @Intrinsic("kotlin.arrays.array") public fun longArrayOf(vararg elements: Long) : LongArray          = elements
 
 /**
  * Returns an array containing the specified [Int] numbers.
  */
+@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
 @Intrinsic("kotlin.arrays.array") public fun intArrayOf(vararg elements: Int) : IntArray             = elements
 
 /**
  * Returns an array containing the specified characters.
  */
+@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
 @Intrinsic("kotlin.arrays.array") public fun charArrayOf(vararg elements: Char) : CharArray          = elements
 
 /**
  * Returns an array containing the specified [Short] numbers.
  */
+@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
 @Intrinsic("kotlin.arrays.array") public fun shortArrayOf(vararg elements: Short) : ShortArray       = elements
 
 /**
  * Returns an array containing the specified [Byte] numbers.
  */
+@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
 @Intrinsic("kotlin.arrays.array") public fun byteArrayOf(vararg elements: Byte) : ByteArray          = elements
 
 /**
  * Returns an array containing the specified boolean values.
  */
+@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
 @Intrinsic("kotlin.arrays.array") public fun booleanArrayOf(vararg elements: Boolean) : BooleanArray = elements
 
 /**
