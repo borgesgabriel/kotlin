@@ -14,12 +14,11 @@ enum class C {
 
     E4 {
         fun c() {
-            //TODO: this is a bug
-            this.<!UNRESOLVED_REFERENCE!>B<!>()
+            this.B()
 
             C.A()
             A()
-            //TODO: this is a bug
+            //TODO: should be resolved with error
             this.<!UNRESOLVED_REFERENCE!>A<!>()
         }
     };
