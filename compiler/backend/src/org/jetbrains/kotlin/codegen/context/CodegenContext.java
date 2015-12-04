@@ -266,6 +266,10 @@ public abstract class CodegenContext<T extends DeclarationDescriptor> {
         return new MultifileClassFacadeContext(descriptor, this, multifileClassType, filePartType);
     }
 
+    public ClassContext intoDefaultImplClass(ClassDescriptor descriptor, ClassContext interfaceContext, GenerationState state) {
+        return new DefaultImplClassContext(state.getTypeMapper(), descriptor, OwnerKind.DEFAULT_IMPLS, this, null, interfaceContext);
+    }
+
     @NotNull
     public ClassContext intoClass(ClassDescriptor descriptor, OwnerKind kind, GenerationState state) {
         if (descriptor.isCompanionObject()) {
