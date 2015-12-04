@@ -42,8 +42,13 @@ fun test5() {
     <!UNSUPPORTED!><!REIFIED_TYPE_FORBIDDEN_SUBSTITUTION!>Array<!><Nothing>(10) { throw Exception() }<!>
 }
 
-fun <T> foo(): Array<T> =
-        (object {} as Any) as Array<T>
+fun <T> foo(): Array<T> = (object {} as Any) as Array<T>
 
-fun bar() =
-        <!UNSUPPORTED!>foo<Nothing>()<!>
+fun test6() = <!UNSUPPORTED!>foo<Nothing>()<!>
+
+
+class B<T>(val array: Array<T>)
+
+fun <T> bar() = B<Array<T>>(arrayOf())
+
+fun test7() = <!UNSUPPORTED!>foo<Nothing>()<!>

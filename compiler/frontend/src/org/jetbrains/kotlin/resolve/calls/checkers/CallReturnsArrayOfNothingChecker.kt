@@ -20,16 +20,25 @@ import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.diagnostics.Errors
 import org.jetbrains.kotlin.resolve.calls.context.BasicCallResolutionContext
 import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall
+import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.typeUtil.isArrayOfNothing
 
 class CallReturnsArrayOfNothingChecker : CallChecker {
     override fun <F : CallableDescriptor> check(resolvedCall: ResolvedCall<F>, context: BasicCallResolutionContext) {
         val returnType = resolvedCall.resultingDescriptor.returnType
 
-        if (returnType.isArrayOfNothing()) {
+        if (returnType.containsArrayOfNothing()) {
             val callElement = resolvedCall.call.callElement
-            val diagnostic = Errors.UNSUPPORTED.on(callElement, "Return type of Array<Nothing> is illegal")
+            val diagnostic = Errors.UNSUPPORTED.on(callElement, "Array<Nothing> in return type is illegal")
             context.trace.report(diagnostic)
         }
+    }
+
+    private fun KotlinType?.containsArrayOfNothing(): Boolean {
+        if (this == null) return false
+
+        if (isArrayOfNothing()) return true
+
+        return arguments.any { it.type.containsArrayOfNothing() }
     }
 }
