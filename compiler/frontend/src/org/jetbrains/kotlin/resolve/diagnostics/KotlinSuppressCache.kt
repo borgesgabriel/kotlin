@@ -50,7 +50,7 @@ interface DiagnosticSuppressor {
     }
 }
 
-abstract class SuppressionManager {
+abstract class KotlinSuppressCache {
     private val LOG = Logger.getInstance(DiagnosticsWithSuppression::class.java)
 
     private val ADDITIONAL_SUPPRESS_STRING_PROVIDERS = ExtensionProvider.create(SuppressStringProvider.EP_NAME)
@@ -129,12 +129,14 @@ abstract class SuppressionManager {
             LOG.debug("Cache size: ", suppressors.size, "\n")
         }
 
+        val lowerCaseSuppressionKey = suppressionKey.toLowerCase()
+
         val suppressor = getOrCreateSuppressor(annotated)
-        if (suppressor.isSuppressed(suppressionKey, severity)) return true
+        if (suppressor.isSuppressed(lowerCaseSuppressionKey, severity)) return true
 
         val annotatedAbove = KtStubbedPsiUtil.getPsiOrStubParent(suppressor.annotatedElement, KtAnnotated::class.java, true) ?: return false
 
-        val suppressed = isSuppressedByAnnotated(suppressionKey, severity, annotatedAbove, debugDepth + 1)
+        val suppressed = isSuppressedByAnnotated(lowerCaseSuppressionKey, severity, annotatedAbove, debugDepth + 1)
         val suppressorAbove = suppressors[annotatedAbove]
         if (suppressorAbove != null && suppressorAbove.dominates(suppressor)) {
             suppressors.put(annotated, suppressorAbove)
@@ -249,7 +251,7 @@ abstract class SuppressionManager {
     }
 }
 
-class BindingContextSuppressionManager(val context: BindingContext) : SuppressionManager() {
+class BindingContextKotlinSuppressCache(val context: BindingContext) : KotlinSuppressCache() {
     override fun getSuppressionAnnotations(annotated: KtAnnotated): List<AnnotationDescriptor?> {
         val descriptor = context.get(BindingContext.DECLARATION_TO_DESCRIPTOR, annotated)
 
