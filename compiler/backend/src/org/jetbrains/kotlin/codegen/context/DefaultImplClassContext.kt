@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.codegen.context
 
+import org.jetbrains.kotlin.codegen.AccessorForCallableDescriptor
 import org.jetbrains.kotlin.codegen.OwnerKind
 import org.jetbrains.kotlin.codegen.state.JetTypeMapper
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
@@ -36,5 +37,12 @@ class DefaultImplClassContext(
 
     override fun findChildContext(child: DeclarationDescriptor): CodegenContext<*>? {
         return interfaceContext.findChildContext(child)
+    }
+
+    override fun getAccessors(): Collection<AccessorForCallableDescriptor<*>> {
+        val accessors = super.getAccessors()
+        val alreadyExists = accessors.toMap ({ Pair(it.calleeDescriptor, it.superCallTarget) }) { it }
+        val filtered = interfaceContext.accessors.filter { !alreadyExists.containsKey(Pair(it.calleeDescriptor, it.superCallTarget)) }
+        return accessors + filtered
     }
 }
