@@ -39,6 +39,6 @@ class CallReturnsArrayOfNothingChecker : CallChecker {
 
         if (isArrayOfNothing()) return true
 
-        return arguments.any { it.type.containsArrayOfNothing() }
+        return arguments.any { !it.isStarProjection && it.type.containsArrayOfNothing() }
     }
 }
