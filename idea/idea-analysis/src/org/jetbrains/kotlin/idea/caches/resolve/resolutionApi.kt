@@ -18,6 +18,7 @@
 
 package org.jetbrains.kotlin.idea.caches.resolve
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analyzer.AnalysisResult
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -30,6 +31,7 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTraceContext
 import org.jetbrains.kotlin.resolve.ImportPath
 import org.jetbrains.kotlin.resolve.QualifiedExpressionResolver
+import org.jetbrains.kotlin.resolve.diagnostics.KotlinSuppressCache
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 
 public fun KtElement.getResolutionFacade(): ResolutionFacade {
@@ -75,6 +77,8 @@ public fun KtElement.analyzeFully(): BindingContext {
 public fun KtElement.analyzeFullyAndGetResult(vararg extraFiles: KtFile): AnalysisResult {
     return KotlinCacheService.getInstance(getProject()).getResolutionFacade(listOf(this) + extraFiles.toList()).analyzeFullyAndGetResult(listOf(this))
 }
+
+public fun Project.suppressionCache(): KotlinSuppressCache = KotlinCacheService.getInstance(this).getSuppressionCache()
 
 // this method don't check visibility and collect all descriptors with given fqName
 public fun ResolutionFacade.resolveImportReference(

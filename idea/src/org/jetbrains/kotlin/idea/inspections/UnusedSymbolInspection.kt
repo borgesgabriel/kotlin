@@ -38,18 +38,16 @@ import com.intellij.refactoring.safeDelete.SafeDeleteHandler
 import com.intellij.util.Processor
 import org.jetbrains.kotlin.asJava.LightClassUtil
 import org.jetbrains.kotlin.asJava.toLightClass
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.Annotated
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.diagnostics.Severity
 import org.jetbrains.kotlin.idea.KotlinBundle
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
+import org.jetbrains.kotlin.idea.caches.resolve.suppressionCache
 import org.jetbrains.kotlin.idea.findUsages.KotlinFindUsagesHandlerFactory
 import org.jetbrains.kotlin.idea.findUsages.handlers.KotlinFindClassUsagesHandler
 import org.jetbrains.kotlin.idea.search.usagesSearch.*
 import org.jetbrains.kotlin.idea.util.ProjectRootsUtil
 import org.jetbrains.kotlin.lexer.KtTokens
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getElementTextWithContext
 import org.jetbrains.kotlin.psi.psiUtil.getNonStrictParentOfType
@@ -57,8 +55,6 @@ import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.isAncestor
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
-import org.jetbrains.kotlin.resolve.constants.ArrayValue
-import org.jetbrains.kotlin.resolve.diagnostics.SuppressionManager
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import org.jetbrains.kotlin.utils.singletonOrEmptyList
@@ -70,8 +66,6 @@ import javax.swing.JPanel
 
 public class UnusedSymbolInspection : AbstractKotlinInspection() {
     companion object {
-        private val SUPPRESS_ANNOTATION_FQNAME = FqName(Suppress::class.qualifiedName!!)
-        
         private val javaInspection = UnusedDeclarationInspection()
 
         public fun isEntryPoint(declaration: KtNamedDeclaration): Boolean {
@@ -177,23 +171,7 @@ public class UnusedSymbolInspection : AbstractKotlinInspection() {
                 // properties can be referred by component1/component2, which is too expensive to search, don't mark them as unused
                 if (declaration is KtParameter && declaration.dataClassComponentFunction() != null) return
 
-                analyze.diagnostics
-
-                val suppressionManager: SuppressionManager = object : SuppressionManager() {
-                    override fun getSuppressionAnnotations(annotated: KtAnnotated): List<AnnotationDescriptor?> {
-                        val context = annotated.analyze(BodyResolveMode.PARTIAL)
-                        val annotatedDescriptor = context.get(BindingContext.DECLARATION_TO_DESCRIPTOR, annotated)
-
-                        if (annotatedDescriptor != null) {
-                            return annotatedDescriptor.annotations.toList()
-                        }
-                        else {
-                            return annotated.annotationEntries.map { context.get(BindingContext.ANNOTATION, it) }
-                        }
-                    }
-                }
-
-                if (suppressionManager.isSuppressed(declaration, "unused", Severity.WARNING)) return
+                if (declaration.project.suppressionCache().isSuppressed(declaration, "unused", Severity.WARNING)) return
 
                 // Main checks: finding reference usages && text usages
                 if (hasNonTrivialUsages(declaration)) return

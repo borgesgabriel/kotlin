@@ -16,9 +16,12 @@
 
 package org.jetbrains.kotlin.idea.inspections
 
+import com.intellij.codeHighlighting.HighlightDisplayLevel
 import com.intellij.psi.PsiElement
 import com.intellij.codeInsight.daemon.HighlightDisplayKey
 import com.intellij.codeInspection.*
+import org.jetbrains.kotlin.diagnostics.Severity
+import org.jetbrains.kotlin.idea.caches.resolve.suppressionCache
 
 public abstract class AbstractKotlinInspection: LocalInspectionTool(), CustomSuppressableInspectionTool {
     public override fun getSuppressActions(element: PsiElement?): Array<SuppressIntentionAction>? {
@@ -26,6 +29,29 @@ public abstract class AbstractKotlinInspection: LocalInspectionTool(), CustomSup
     }
 
     public override fun isSuppressedFor(element: PsiElement): Boolean {
-        return SuppressManager.getInstance()!!.isSuppressedFor(element, getID())
+        if (SuppressManager.getInstance()!!.isSuppressedFor(element, getID())) {
+            return true
+        }
+
+        if (element.project.suppressionCache().isSuppressed(element, this.shortName, toSeverity(defaultLevel))) {
+            return true
+        }
+
+        return false
+    }
+
+    public fun toSeverity(highlightDisplayLevel: HighlightDisplayLevel): Severity  {
+        return when (highlightDisplayLevel) {
+            HighlightDisplayLevel.DO_NOT_SHOW -> Severity.INFO
+
+            HighlightDisplayLevel.WARNING,
+            HighlightDisplayLevel.WEAK_WARNING -> Severity.WARNING
+
+            HighlightDisplayLevel.ERROR,
+            HighlightDisplayLevel.GENERIC_SERVER_ERROR_OR_WARNING,
+            HighlightDisplayLevel.NON_SWITCHABLE_ERROR -> Severity.ERROR
+
+            else -> Severity.ERROR
+        }
     }
 }
