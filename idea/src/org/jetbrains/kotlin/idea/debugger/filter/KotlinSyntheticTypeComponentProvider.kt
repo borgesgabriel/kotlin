@@ -20,6 +20,7 @@ import com.intellij.debugger.engine.SyntheticTypeComponentProvider
 import com.sun.jdi.AbsentInformationException
 import com.sun.jdi.Method
 import com.sun.jdi.TypeComponent
+import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.name.FqNameUnsafe
 
 public class KotlinSyntheticTypeComponentProvider: SyntheticTypeComponentProvider {
@@ -28,6 +29,8 @@ public class KotlinSyntheticTypeComponentProvider: SyntheticTypeComponentProvide
 
         val typeName = typeComponent.declaringType().name()
         if (!FqNameUnsafe.isValid(typeName)) return false
+
+        if (typeName.isDefaultImplClass()) return true
 
         try {
             if (typeComponent.location().lineNumber() != 1) return false
@@ -42,4 +45,6 @@ public class KotlinSyntheticTypeComponentProvider: SyntheticTypeComponentProvide
             return false
         }
     }
+
+    private fun String.isDefaultImplClass() = endsWith(JvmAbi.DEFAULT_IMPLS_SUFFIX)
 }
