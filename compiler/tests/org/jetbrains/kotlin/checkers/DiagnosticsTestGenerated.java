@@ -6624,6 +6624,12 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
                 doTest(fileName);
             }
 
+            @TestMetadata("InconsistentTypeParameterBounds.kt")
+            public void testInconsistentTypeParameterBounds() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/generics/InconsistentTypeParameterBounds.kt");
+                doTest(fileName);
+            }
+
             @TestMetadata("kt1575-Class.kt")
             public void testKt1575_Class() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/generics/kt1575-Class.kt");
@@ -6705,6 +6711,12 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
             @TestMetadata("TypeParameterBounds.kt")
             public void testTypeParameterBounds() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/generics/TypeParameterBounds.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("TypeParametersInTypeParameterBounds.kt")
+            public void testTypeParametersInTypeParameterBounds() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/generics/TypeParametersInTypeParameterBounds.kt");
                 doTest(fileName);
             }
 
@@ -16980,6 +16992,12 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
                 KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/diagnostics/tests/typeParameters"), Pattern.compile("^(.+)\\.kt$"), true);
             }
 
+            @TestMetadata("cannotHaveManyClassUpperBounds.kt")
+            public void testCannotHaveManyClassUpperBounds() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/typeParameters/cannotHaveManyClassUpperBounds.kt");
+                doTest(fileName);
+            }
+
             @TestMetadata("deprecatedSyntax.kt")
             public void testDeprecatedSyntax() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/typeParameters/deprecatedSyntax.kt");
@@ -17007,6 +17025,12 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
             @TestMetadata("propertyTypeParameters.kt")
             public void testPropertyTypeParameters() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/typeParameters/propertyTypeParameters.kt");
+                doTest(fileName);
+            }
+
+            @TestMetadata("repeatedBound.kt")
+            public void testRepeatedBound() throws Exception {
+                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/typeParameters/repeatedBound.kt");
                 doTest(fileName);
             }
 
