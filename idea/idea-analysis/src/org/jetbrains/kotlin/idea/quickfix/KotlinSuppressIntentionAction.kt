@@ -27,11 +27,18 @@ import org.jetbrains.kotlin.idea.util.PsiPrecedences
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
 
-public class KotlinSuppressIntentionAction(
-        private val suppressAt: KtExpression,
+class KotlinSuppressIntentionAction private constructor(
+        private val suppressAt: PsiElement,
         private val suppressKey: String,
         private val kind: AnnotationHostKind
 ) : SuppressIntentionAction() {
+    public constructor(suppressAt: KtExpression,
+                       suppressKey: String,
+                       kind: AnnotationHostKind) : this(suppressAt as PsiElement, suppressKey, kind)
+
+    public constructor(suppressAt: KtFile,
+                       suppressKey: String,
+                       kind: AnnotationHostKind) : this(suppressAt as PsiElement, suppressKey, kind)
 
     override fun getFamilyName() = KotlinBundle.message("suppress.warnings.family")
     override fun getText() = KotlinBundle.message("suppress.warning.for", suppressKey, kind.kind, kind.name)
@@ -48,6 +55,9 @@ public class KotlinSuppressIntentionAction(
         }
         else if (suppressAt is KtExpression) {
             suppressAtExpression(CaretBox(suppressAt, editor), id)
+        }
+        else if (suppressAt is KtFile) {
+            //suppressAtFile()
         }
     }
 
