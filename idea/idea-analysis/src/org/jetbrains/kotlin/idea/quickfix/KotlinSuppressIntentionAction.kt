@@ -25,13 +25,21 @@ import org.jetbrains.kotlin.idea.KotlinBundle
 import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.idea.util.PsiPrecedences
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.psiUtil.replaceFileAnnotationList
 import org.jetbrains.kotlin.resolve.BindingContext
 
-public class KotlinSuppressIntentionAction(
-        private val suppressAt: KtExpression,
+class KotlinSuppressIntentionAction private constructor(
+        private val suppressAt: PsiElement,
         private val suppressKey: String,
         private val kind: AnnotationHostKind
 ) : SuppressIntentionAction() {
+    public constructor(suppressAt: KtExpression,
+                       suppressKey: String,
+                       kind: AnnotationHostKind) : this(suppressAt as PsiElement, suppressKey, kind)
+
+    public constructor(suppressAt: KtFile,
+                       suppressKey: String,
+                       kind: AnnotationHostKind) : this(suppressAt as PsiElement, suppressKey, kind)
 
     override fun getFamilyName() = KotlinBundle.message("suppress.warnings.family")
     override fun getText() = KotlinBundle.message("suppress.warning.for", suppressKey, kind.kind, kind.name)
@@ -40,15 +48,44 @@ public class KotlinSuppressIntentionAction(
 
     override fun invoke(project: Project, editor: Editor?, element: PsiElement) {
         val id = "\"$suppressKey\""
-        if (suppressAt is KtModifierListOwner) {
-            suppressAtModifierListOwner(suppressAt, id)
+        when (suppressAt) {
+            is KtModifierListOwner ->
+                suppressAtModifierListOwner(suppressAt, id)
+
+            is KtAnnotatedExpression ->
+                suppressAtAnnotatedExpression(CaretBox(suppressAt, editor), id)
+
+            is KtExpression ->
+                suppressAtExpression(CaretBox(suppressAt, editor), id)
+
+            is KtFile ->
+                suppressAtFile(suppressAt, id)
         }
-        else if (suppressAt is KtAnnotatedExpression) {
-            suppressAtAnnotatedExpression(CaretBox(suppressAt, editor), id)
+    }
+
+    private fun suppressAtFile(ktFile: KtFile, id: String) {
+        val psiFactory = KtPsiFactory(suppressAt)
+
+        val fileAnnotationList: KtFileAnnotationList? = ktFile.fileAnnotationList
+        if (fileAnnotationList == null) {
+            val newAnnotationList = psiFactory.createFileAnnotationListWithAnnotation(KotlinBuiltIns.FQ_NAMES.suppress.shortName())
+            val createAnnotationList = replaceFileAnnotationList(ktFile, newAnnotationList)
+            addArgumentToSuppressAnnotation(createAnnotationList.annotationEntries.first(), id)
+
+            ktFile.addAfter(psiFactory.createWhiteSpace(kind), createAnnotationList)
+
+            return
         }
-        else if (suppressAt is KtExpression) {
-            suppressAtExpression(CaretBox(suppressAt, editor), id)
+
+        var suppressAnnotation: KtAnnotationEntry? = findSuppressAnnotation(fileAnnotationList)
+        if (suppressAnnotation == null) {
+            val newSuppressAnnotation = psiFactory.createFileAnnotation(KotlinBuiltIns.FQ_NAMES.suppress.shortName())
+            fileAnnotationList.add(psiFactory.createWhiteSpace(kind))
+
+            suppressAnnotation = fileAnnotationList.add(newSuppressAnnotation) as KtAnnotationEntry
         }
+        
+        addArgumentToSuppressAnnotation(suppressAnnotation, id)
     }
 
     private fun suppressAtModifierListOwner(suppressAt: KtModifierListOwner, id: String) {
@@ -129,7 +166,16 @@ public class KotlinSuppressIntentionAction(
 
     private fun findSuppressAnnotation(annotated: KtAnnotated): KtAnnotationEntry? {
         val context = annotated.analyze()
-        for (entry in annotated.getAnnotationEntries()) {
+        return findSuppressAnnotation(context, annotated.getAnnotationEntries())
+    }
+
+    private fun findSuppressAnnotation(annotationList: KtFileAnnotationList): KtAnnotationEntry? {
+        val context = annotationList.analyze()
+        return findSuppressAnnotation(context, annotationList.annotationEntries)
+    }
+
+    private fun findSuppressAnnotation(context: BindingContext, annotationEntries: List<KtAnnotationEntry>): KtAnnotationEntry? {
+        for (entry in annotationEntries) {
             val annotationDescriptor = context.get(BindingContext.ANNOTATION, entry)
             if (annotationDescriptor != null && KotlinBuiltIns.isSuppressAnnotation(annotationDescriptor)) {
                 return entry
