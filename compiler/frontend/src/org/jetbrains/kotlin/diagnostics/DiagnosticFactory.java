@@ -30,6 +30,11 @@ public abstract class DiagnosticFactory<D extends Diagnostic> {
         this.severity = severity;
     }
 
+    protected DiagnosticFactory(@NotNull Severity severity, @NotNull String name) {
+        this.severity = severity;
+        this.name = name;
+    }
+
     /*package*/ void setName(@NotNull String name) {
         this.name = name;
     }
