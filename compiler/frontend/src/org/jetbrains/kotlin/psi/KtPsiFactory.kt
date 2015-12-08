@@ -155,6 +155,14 @@ public class KtPsiFactory(private val project: Project) {
         return createClass("class A {\n companion object{\n}\n}").getCompanionObjects().first()
     }
 
+    public fun createFileAnnotation(annotation: Name): KtAnnotationEntry {
+        return createFileAnnotationListWithAnnotation(annotation).annotationEntries.first()
+    }
+
+    public fun createFileAnnotationListWithAnnotation(annotation: Name) : KtFileAnnotationList {
+        return createFile("@file:${annotation.identifier}()").fileAnnotationList!!
+    }
+
     public fun createFile(text: String): KtFile {
         return createFile("dummy.kt", text)
     }
