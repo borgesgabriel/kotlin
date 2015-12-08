@@ -75,6 +75,14 @@ public abstract class ClassBodyCodegen extends MemberCodegen<KtClassOrObject> {
             }
         }
 
+        generatePrimaryConstructorProperties();
+        generateConstructors();
+        generateDerivative();
+
+        for (KtObjectDeclaration companion : companions) {
+            generateDeclaration(companion);
+        }
+
         if (!DescriptorUtils.isInterface(descriptor)) {
             for (DeclarationDescriptor memberDescriptor : DescriptorUtils.getAllDescriptors(descriptor.getDefaultType().getMemberScope())) {
                 if (memberDescriptor instanceof CallableMemberDescriptor) {
@@ -96,14 +104,6 @@ public abstract class ClassBodyCodegen extends MemberCodegen<KtClassOrObject> {
                     }
                 }
             }
-        }
-
-        generatePrimaryConstructorProperties();
-        generateConstructors();
-        generateDerivative();
-
-        for (KtObjectDeclaration companion : companions) {
-            generateDeclaration(companion);
         }
     }
 

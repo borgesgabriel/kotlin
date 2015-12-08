@@ -389,9 +389,7 @@ public class ImplementationBodyCodegen extends ClassBodyCodegen {
 
         generateToArray();
 
-        if (state.getClassBuilderMode() != ClassBuilderMode.LIGHT_CLASSES) {
-            genClosureFields(context.closure, v, typeMapper);
-        }
+        genClosureFields(context.closure, v, typeMapper);
 
         for (ExpressionCodegenExtension extension : ExpressionCodegenExtension.Companion.getInstances(state.getProject())) {
             extension.generateClassSyntheticParts(v, state, myClass, descriptor);
