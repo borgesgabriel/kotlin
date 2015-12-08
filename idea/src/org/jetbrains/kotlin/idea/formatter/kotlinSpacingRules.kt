@@ -84,6 +84,11 @@ fun createSpacingBuilder(settings: CodeStyleSettings): KotlinSpacingBuilder {
 
         simple {
             // ============ Line breaks ==============
+            before(FILE_ANNOTATION_LIST).lineBreakInCode()
+            between(FILE_ANNOTATION_LIST, PACKAGE_DIRECTIVE).blankLines(1)
+            between(FILE_ANNOTATION_LIST, IMPORT_LIST).blankLines(1)
+            between(FILE_ANNOTATION_LIST, DECLARATIONS).blankLines(1)
+
             after(PACKAGE_DIRECTIVE).blankLines(1)
             between(IMPORT_DIRECTIVE, IMPORT_DIRECTIVE).lineBreakInCode()
             after(IMPORT_LIST).blankLines(1)
