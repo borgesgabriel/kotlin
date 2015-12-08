@@ -18,13 +18,5 @@ fun main(args: Array<String>) {
     //Breakpoint!
     bar().foo("1")
 
-    // SMART_STEP_INTO_BY_INDEX: 2
-    // RESUME: 1
-    //Breakpoint!
-    bar().foo()
 
-    // SMART_STEP_INTO_BY_INDEX: 2
-    // RESUME: 1
-    //Breakpoint!
-    bar().foo(2)
 }
