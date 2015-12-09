@@ -30,9 +30,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiElementVisitor
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.search.PsiSearchHelper
-import com.intellij.psi.search.PsiSearchHelper.SearchCostResult.FEW_OCCURRENCES
-import com.intellij.psi.search.PsiSearchHelper.SearchCostResult.TOO_MANY_OCCURRENCES
-import com.intellij.psi.search.PsiSearchHelper.SearchCostResult.ZERO_OCCURRENCES
+import com.intellij.psi.search.PsiSearchHelper.SearchCostResult.*
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.DefinitionsScopedSearch
 import com.intellij.psi.search.searches.ReferencesSearch
@@ -40,24 +38,23 @@ import com.intellij.refactoring.safeDelete.SafeDeleteHandler
 import com.intellij.util.Processor
 import org.jetbrains.kotlin.asJava.LightClassUtil
 import org.jetbrains.kotlin.asJava.toLightClass
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.annotations.Annotated
 import org.jetbrains.kotlin.idea.KotlinBundle
-import org.jetbrains.kotlin.idea.caches.resolve.analyze
 import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
 import org.jetbrains.kotlin.idea.findUsages.KotlinFindUsagesHandlerFactory
 import org.jetbrains.kotlin.idea.findUsages.handlers.KotlinFindClassUsagesHandler
 import org.jetbrains.kotlin.idea.search.usagesSearch.*
 import org.jetbrains.kotlin.idea.util.ProjectRootsUtil
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getElementTextWithContext
 import org.jetbrains.kotlin.psi.psiUtil.getNonStrictParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.getParentOfType
 import org.jetbrains.kotlin.psi.psiUtil.isAncestor
-import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
-import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
-import org.jetbrains.kotlin.types.expressions.OperatorConventions
+import org.jetbrains.kotlin.resolve.constants.ArrayValue
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import org.jetbrains.kotlin.utils.singletonOrEmptyList
 import java.awt.GridBagConstraints
@@ -68,6 +65,8 @@ import javax.swing.JPanel
 
 public class UnusedSymbolInspection : AbstractKotlinInspection() {
     companion object {
+        private val SUPPRESS_ANNOTATION_FQNAME = FqName(Suppress::class.qualifiedName!!)
+        
         private val javaInspection = UnusedDeclarationInspection()
 
         public fun isEntryPoint(declaration: KtNamedDeclaration): Boolean {
@@ -142,6 +141,8 @@ public class UnusedSymbolInspection : AbstractKotlinInspection() {
             }
 
             override fun visitNamedDeclaration(declaration: KtNamedDeclaration) {
+                if (!ProjectRootsUtil.isInProjectSource(declaration)) return
+
                 val messageKey = when (declaration) {
                     is KtClass -> "unused.class"
                     is KtObjectDeclaration -> "unused.object"
@@ -150,8 +151,6 @@ public class UnusedSymbolInspection : AbstractKotlinInspection() {
                     is KtTypeParameter -> "unused.type.parameter"
                     else -> return
                 }
-
-                if (!ProjectRootsUtil.isInProjectSource(declaration)) return
 
                 // Simple PSI-based checks
                 val isCompanionObject = declaration is KtObjectDeclaration && declaration.isCompanion()
@@ -163,12 +162,15 @@ public class UnusedSymbolInspection : AbstractKotlinInspection() {
                 if (declaration is KtNamedFunction && isConventionalName(declaration)) return
 
                 // More expensive, resolve-based checks
-                if (declaration.resolveToDescriptorIfAny() == null) return
+                val descriptor = declaration.resolveToDescriptorIfAny()
+                if (descriptor == null) return
                 if (isEntryPoint(declaration)) return
                 if (declaration is KtProperty && declaration.isSerializationImplicitlyUsedField()) return
                 if (isCompanionObject && (declaration as KtObjectDeclaration).hasSerializationImplicitlyUsedField()) return
                 // properties can be referred by component1/component2, which is too expensive to search, don't mark them as unused
                 if (declaration is KtParameter && declaration.dataClassComponentFunction() != null) return
+
+                if (isSuppressedWithAnnotation(descriptor, SUPPRESS_ANNOTATION_FQNAME)) return
 
                 // Main checks: finding reference usages && text usages
                 if (hasNonTrivialUsages(declaration)) return
@@ -191,6 +193,17 @@ public class UnusedSymbolInspection : AbstractKotlinInspection() {
                 )
 
                 holder.registerProblem(problemDescriptor)
+            }
+
+            private fun isSuppressedWithAnnotation(descriptor: DeclarationDescriptor, fqName: FqName): Boolean {
+                val annotation = descriptor.annotations.findAnnotation(fqName)
+                if (annotation != null) {
+                    val suppressedStrings = annotation.getAllValueArguments().values.singleOrNull()
+                    if (suppressedStrings is ArrayValue) {
+                        if (suppressedStrings.value.any { it.value == "unused" }) return true
+                    }
+                }
+                return false
             }
         }
     }
