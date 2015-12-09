@@ -304,7 +304,7 @@ public class DeserializedClassDescriptor(
             name ->
             if (name in enumEntryNames) {
                 EnumEntrySyntheticClassDescriptor.create(
-                        c.storageManager, this@DeserializedClassDescriptor, name, enumMemberNames, SourceElement.NO_SOURCE
+                        c.storageManager, this@DeserializedClassDescriptor, name, enumMemberNames, Annotations.EMPTY, SourceElement.NO_SOURCE
                 )
             }
             else null
