@@ -228,7 +228,7 @@ public class DiagnosticsWithSuppression implements Diagnostics {
         return builder.build();
     }
 
-    private void processAnnotation(ImmutableSet.Builder<String> builder, AnnotationDescriptor annotationDescriptor) {
+    private static void processAnnotation(ImmutableSet.Builder<String> builder, AnnotationDescriptor annotationDescriptor) {
         if (annotationDescriptor == null) return;
 
         for (SuppressStringProvider suppressStringProvider : ADDITIONAL_SUPPRESS_STRING_PROVIDERS.get()) {
@@ -249,10 +249,15 @@ public class DiagnosticsWithSuppression implements Diagnostics {
         }
     }
 
-    public static boolean isSuppressedByStrings(@NotNull Diagnostic diagnostic, @NotNull Set<String> strings) {
-        if (strings.contains("warnings") && diagnostic.getSeverity() == Severity.WARNING) return true;
+    @NotNull
+    public static String getDiagnosticSuppressKey(@NotNull Diagnostic diagnostic) {
+        return diagnostic.getFactory().getName().toLowerCase();
+    }
 
-        return strings.contains(diagnostic.getFactory().getName().toLowerCase());
+    public static boolean isSuppressedByStrings(@NotNull String key, @NotNull Set<String> strings, Severity severity) {
+        if (strings.contains("warnings") && severity == Severity.WARNING) return true;
+
+        return strings.contains(key);
     }
 
     @NotNull
@@ -275,6 +280,8 @@ public class DiagnosticsWithSuppression implements Diagnostics {
 
         public abstract boolean isSuppressed(@NotNull Diagnostic diagnostic);
 
+        public abstract boolean isSuppressed(@NotNull String suppressionKey, @NotNull Severity severity);
+
         // true is \forall x. other.isSuppressed(x) -> this.isSuppressed(x)
         public abstract boolean dominates(@NotNull Suppressor other);
     }
@@ -287,6 +294,11 @@ public class DiagnosticsWithSuppression implements Diagnostics {
 
         @Override
         public boolean isSuppressed(@NotNull Diagnostic diagnostic) {
+            return false;
+        }
+
+        @Override
+        public boolean isSuppressed(@NotNull String suppressionKey, @NotNull Severity severity) {
             return false;
         }
 
@@ -306,7 +318,12 @@ public class DiagnosticsWithSuppression implements Diagnostics {
 
         @Override
         public boolean isSuppressed(@NotNull Diagnostic diagnostic) {
-            return isSuppressedByStrings(diagnostic, ImmutableSet.of(string));
+            return isSuppressed(getDiagnosticSuppressKey(diagnostic), diagnostic.getSeverity());
+        }
+
+        @Override
+        public boolean isSuppressed(@NotNull String suppressionKey, @NotNull Severity severity) {
+            return isSuppressedByStrings(suppressionKey, ImmutableSet.of(string), severity);
         }
 
         @Override
@@ -326,7 +343,12 @@ public class DiagnosticsWithSuppression implements Diagnostics {
 
         @Override
         public boolean isSuppressed(@NotNull Diagnostic diagnostic) {
-            return isSuppressedByStrings(diagnostic, strings);
+            return isSuppressed(getDiagnosticSuppressKey(diagnostic), diagnostic.getSeverity());
+        }
+
+        @Override
+        public boolean isSuppressed(@NotNull String suppressionKey, @NotNull Severity severity) {
+            return isSuppressedByStrings(suppressionKey, strings, severity);
         }
 
         @Override
