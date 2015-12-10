@@ -18,13 +18,17 @@ package org.jetbrains.kotlin.idea.decompiler.textBuilder
 
 import com.intellij.openapi.util.TextRange
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.platform.JvmBuiltIns
 import org.jetbrains.kotlin.renderer.DescriptorRenderer
 import org.jetbrains.kotlin.renderer.DescriptorRendererModifier
 import org.jetbrains.kotlin.renderer.DescriptorRendererOptions
 import org.jetbrains.kotlin.renderer.ExcludedTypeAnnotations
 import org.jetbrains.kotlin.resolve.DescriptorUtils.isEnumEntry
 import org.jetbrains.kotlin.resolve.dataClassUtils.isComponentLike
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
+import org.jetbrains.kotlin.resolve.descriptorUtil.resolveTopLevelClass
 import org.jetbrains.kotlin.resolve.descriptorUtil.secondaryConstructors
 import org.jetbrains.kotlin.types.error.MissingDependencyErrorClass
 import org.jetbrains.kotlin.types.isFlexible
@@ -70,7 +74,16 @@ public fun buildDecompiledText(
     }
 
     fun saveDescriptorToRange(descriptor: DeclarationDescriptor, startOffset: Int, endOffset: Int) {
-        renderedDescriptorsToRange[descriptorToKey(descriptor)] = TextRange(startOffset, endOffset)
+        fun DeclarationDescriptor.saveTextRangeForDescriptor() {
+            renderedDescriptorsToRange[descriptorToKey(this)] = TextRange(startOffset, endOffset)
+        }
+
+        if (descriptor is ClassDescriptor) {
+            val builtInsForJvm = JvmBuiltIns.Instance.builtInsModule
+            builtInsForJvm.resolveTopLevelClass(descriptor.fqNameSafe, NoLookupLocation.FROM_IDE)?.saveTextRangeForDescriptor()
+        }
+
+        descriptor.saveTextRangeForDescriptor()
     }
 
     fun appendDescriptor(descriptor: DeclarationDescriptor, indent: String, lastEnumEntry: Boolean? = null) {
