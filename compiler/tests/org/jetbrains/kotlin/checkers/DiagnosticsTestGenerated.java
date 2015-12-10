@@ -457,12 +457,6 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
             doTest(fileName);
         }
 
-        @TestMetadata("PackageAsExpression.kt")
-        public void testPackageAsExpression() throws Exception {
-            String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/PackageAsExpression.kt");
-            doTest(fileName);
-        }
-
         @TestMetadata("PackageInExpressionPosition.kt")
         public void testPackageInExpressionPosition() throws Exception {
             String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/PackageInExpressionPosition.kt");
@@ -12198,12 +12192,6 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
             @TestMetadata("GenericClassVsPackage.kt")
             public void testGenericClassVsPackage() throws Exception {
                 String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/qualifiedExpression/GenericClassVsPackage.kt");
-                doTest(fileName);
-            }
-
-            @TestMetadata("PackageKeyword.kt")
-            public void testPackageKeyword() throws Exception {
-                String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/qualifiedExpression/PackageKeyword.kt");
                 doTest(fileName);
             }
 
