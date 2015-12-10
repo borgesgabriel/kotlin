@@ -75,14 +75,17 @@ private fun findCandidateDeclarationsInIndex(
         return KotlinFullClassNameIndex.getInstance().get(containingClass.fqNameSafe.asString(), project, scope)
     }
 
+    val topLevelDeclaration = DescriptorUtils.getParentOfType(referencedDescriptor, PropertyDescriptor::class.java, false)
+                              ?: DescriptorUtils.getParentOfType(referencedDescriptor, FunctionDescriptor::class.java, false)!!
     //TODO_R: assert is top level
-    val fqName = referencedDescriptor.fqNameSafe.asString()
+    val fqName = topLevelDeclaration.fqNameSafe.asString()
     if (referencedDescriptor is FunctionDescriptor) {
         return KotlinTopLevelFunctionFqnNameIndex.getInstance().get(fqName, project, scope)
     }
     else if (referencedDescriptor is PropertyDescriptor) {
         return KotlinTopLevelPropertyFqnNameIndex.getInstance().get(fqName, project, scope)
     }
+    return emptyList()
     //TODO_R: log
     error("Referenced non local and non top level declaration that is not function or property:\n $referencedDescriptor")
 }
