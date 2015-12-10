@@ -8,4 +8,6 @@ import dependency.*
     }
 
     @A("p") @B(3) @C val p: @B(4) Int = 2
+
+    enum class En { Entry1, @A("2") @B(2) Entry2, @A("3") Entry3 }
 }
