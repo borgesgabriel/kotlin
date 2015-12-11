@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:kotlin.jvm.JvmName("ClassMapping")
+@file:kotlin.jvm.JvmName("JvmClassMappingKt")
 @file:Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 
 package kotlin.jvm
@@ -32,9 +32,6 @@ public val <T : Any> KClass<T>.java: Class<T>
     @JvmName("getJavaClass")
     get() = (this as ClassBasedDeclarationContainer).jClass as Class<T>
 
-@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
-public fun <T: Any> KClass<T>.getJava(): Class<T> = this.java
-
 /**
  * Returns a [KClass] instance corresponding to the given Java [Class] instance.
  */
@@ -42,10 +39,6 @@ public fun <T: Any> KClass<T>.getJava(): Class<T> = this.java
 public val <T : Any> Class<T>.kotlin: KClass<T>
     @JvmName("getKotlinClass")
     get() = Reflection.createKotlinClass(this) as KClass<T>
-
-
-@Deprecated("Provided for binary compatibility", level = DeprecationLevel.HIDDEN)
-public fun <T : Any> Class<T>.getKotlin(): KClass<T> = Reflection.createKotlinClass(this) as KClass<T>
 
 
 /**
@@ -64,7 +57,7 @@ public fun <reified T : Any> Array<*>.isArrayOf(): Boolean =
         T::class.java.isAssignableFrom(this.javaClass.componentType)
 
 /**
- * Returns the annotation type of this annotation.
+ * Returns a [KClass] instance corresponding to the annotation type of this annotation.
  */
 @Suppress("UNCHECKED_CAST")
 public fun <T : Annotation> T.annotationClass() : KClass<out T> =
