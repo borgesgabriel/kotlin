@@ -78,7 +78,8 @@ private fun findCandidateDeclarationsInIndex(
     val topLevelDeclaration = DescriptorUtils.getParentOfType(referencedDescriptor, PropertyDescriptor::class.java, false)
                               ?: DescriptorUtils.getParentOfType(referencedDescriptor, FunctionDescriptor::class.java, false) ?: return emptyList()
 
-    assert(DescriptorUtils.isTopLevelDeclaration(topLevelDeclaration))
+    // synthetic descriptors
+    if (DescriptorUtils.isTopLevelDeclaration(topLevelDeclaration)) return emptyList()
 
     val fqName = topLevelDeclaration.fqNameSafe.asString()
     when (topLevelDeclaration) {
