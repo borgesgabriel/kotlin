@@ -37,7 +37,7 @@ enum class Modality {
 }
 
 val CallableMemberDescriptor.isOverridable: Boolean
-    get() = modality != Modality.FINAL
+    get() = modality != Modality.FINAL && (containingDeclaration as? ClassDescriptor)?.isFinal != true
 
 val ClassDescriptor.isFinal: Boolean
-    get() = modality == Modality.FINAL
+    get() = modality == Modality.FINAL && kind != ClassKind.ENUM_CLASS
