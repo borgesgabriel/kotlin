@@ -87,6 +87,7 @@ public class QuickFixUtil {
         return matchingReturnType;
     }
 
+    //TODO_R: replace with canRefactor everywhere
     public static boolean canModifyElement(@NotNull PsiElement element) {
         return element.isWritable();
     }

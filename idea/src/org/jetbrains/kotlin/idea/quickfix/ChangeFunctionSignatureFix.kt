@@ -57,7 +57,7 @@ abstract class ChangeFunctionSignatureFix(
         if (!super.isAvailable(project, editor, file)) return false
 
         val declarations = DescriptorToSourceUtilsIde.getAllDeclarations(project, functionDescriptor)
-        return declarations.all { it.isValid && QuickFixUtil.canModifyElement(it) }
+        return declarations.isNotEmpty() && declarations.all { it.isValid && QuickFixUtil.canModifyElement(it) }
     }
 
     protected fun getNewArgumentName(argument: ValueArgument, validator: Function1<String, Boolean>): String {
