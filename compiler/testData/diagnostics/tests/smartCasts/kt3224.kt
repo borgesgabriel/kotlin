@@ -3,6 +3,6 @@
 fun test(c : Class<*>) {
     val sc = <!UNCHECKED_CAST!>c as Class<String><!>
     // No ambiguous overload
-    c.getAnnotations();
-    sc.getAnnotations();    
+    <!DEBUG_INFO_SMARTCAST!>c<!>.getAnnotations();
+    sc.getAnnotations();
 }

@@ -33,5 +33,5 @@ fun foo(x: B<*>) {
     val anyA: A<Any> = Test.rawB.field
 
     Test.rawB.field.consume("")
-    val y: Any = Test.rawB.field.produce()
+    val y: Any = <!SMARTCAST_IMPOSSIBLE!>Test.rawB.field<!>.produce()
 }
