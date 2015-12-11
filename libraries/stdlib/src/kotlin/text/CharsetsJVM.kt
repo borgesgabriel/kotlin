@@ -1,4 +1,4 @@
-package kotlin.text
+package kotlin
 
 import java.nio.charset.*
 

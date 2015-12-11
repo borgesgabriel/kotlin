@@ -1,4 +1,4 @@
-package kotlin.text
+package kotlin
 
 /**
  * Represents the character general category in the Unicode specification.
