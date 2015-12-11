@@ -34,7 +34,7 @@ class E : D(), B {
 }
 
 <!ABSTRACT_MEMBER_NOT_IMPLEMENTED!>class E2<!> : B {
-    <!NOTHING_TO_OVERRIDE!>override<!> fun foo(x: Any, y: List<String?>): String = ""
+    <!NOTHING_TO_OVERRIDE!>override<!> fun foo(<!UNUSED_PARAMETER!>x<!>: Any, <!UNUSED_PARAMETER!>y<!>: List<String?>): String = ""
 }
 
 

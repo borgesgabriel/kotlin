@@ -32,10 +32,10 @@ class B2 : RawADerived() {
 class B3 : RawADerived() {
     // Type of second parameter (y) is not equal to overridden
     // RawADerived.foo.y --- (MutableMap<Any?, Any?>..Map<out Any?, out Any?>) is not a subtype of Map<Any?, Any>
-    <!NOTHING_TO_OVERRIDE!>override<!> fun foo(x: CharSequence, y: Map<Any?, Any>, z: HashMap<Any, Any>): A<*> = null!!
+    <!NOTHING_TO_OVERRIDE!>override<!> fun foo(<!UNUSED_PARAMETER!>x<!>: CharSequence, <!UNUSED_PARAMETER!>y<!>: Map<Any?, Any>, <!UNUSED_PARAMETER!>z<!>: HashMap<Any, Any>): A<*> = null!!
 }
 
 class B4 : RawADerived() {
     // Type of first parameter is not equal to overridden
-    <!NOTHING_TO_OVERRIDE!>override<!> fun bar(d: Array<Array<MutableList<Array<Double>>>>) {}
+    <!NOTHING_TO_OVERRIDE!>override<!> fun bar(<!UNUSED_PARAMETER!>d<!>: Array<Array<MutableList<Array<Double>>>>) {}
 }
