@@ -25,7 +25,11 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.hasClassValueDescriptor
 import org.jetbrains.kotlin.resolve.scopes.ImportingScope
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.ResolutionScope
-import org.jetbrains.kotlin.resolve.scopes.receivers.*
+import org.jetbrains.kotlin.resolve.scopes.receivers.CastImplicitClassReceiver
+import org.jetbrains.kotlin.resolve.scopes.receivers.ImplicitClassReceiver
+import org.jetbrains.kotlin.resolve.scopes.receivers.QualifierReceiver
+import org.jetbrains.kotlin.resolve.scopes.receivers.ReceiverValue
+import org.jetbrains.kotlin.resolve.selectMostSpecificInEachOverridableGroup
 import org.jetbrains.kotlin.types.ErrorUtils
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.isDynamic
@@ -71,7 +75,7 @@ internal class ReceiverScopeTowerLevel(
         val dispatchReceiver: ReceiverValue
 ): AbstractScopeTowerLevel(scopeTower) {
 
-    private fun <D: CallableDescriptor> collectMembers(
+    private fun <D : CallableDescriptor> collectMembers(
             getMembers: ResolutionScope.(KotlinType?) -> Collection<D>
     ): Collection<CandidateWithBoundDispatchReceiver<D>> {
         val result = ArrayList<CandidateWithBoundDispatchReceiver<D>>(0)
@@ -86,6 +90,10 @@ internal class ReceiverScopeTowerLevel(
             possibleType.memberScope.getMembers(possibleType).mapTo(result) {
                 createCandidateDescriptor(it, dispatchReceiver.smartCastReceiver(possibleType), unstableError, dispatchReceiverSmartCastType = possibleType)
             }
+        }
+
+        if (smartCastPossibleTypes.isNotEmpty()) {
+            result.retainAll(result.selectMostSpecificInEachOverridableGroup { descriptor })
         }
 
         if (dispatchReceiver.type.isDynamic()) {

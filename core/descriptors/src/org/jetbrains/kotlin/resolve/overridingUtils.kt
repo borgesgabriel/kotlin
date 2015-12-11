@@ -17,12 +17,15 @@
 package org.jetbrains.kotlin.resolve
 
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
+import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import org.jetbrains.kotlin.types.isFlexible
 import org.jetbrains.kotlin.utils.DFS
+import org.jetbrains.kotlin.utils.SmartSet
+import org.jetbrains.kotlin.utils.addIfNotNull
 import java.util.*
 
 fun <TDescriptor : CallableDescriptor> TDescriptor.findTopMostOverriddenDescriptors(): List<TDescriptor> {
@@ -45,4 +48,40 @@ fun <TDescriptor : CallableDescriptor> TDescriptor.findOriginalTopMostOverridden
         @Suppress("UNCHECKED_CAST")
         (it.original as TDescriptor)
     }
+}
+
+public fun <TCallableDescriptorHandle : Any> Collection<TCallableDescriptorHandle>.selectMostSpecificInEachOverridableGroup(
+        descriptorByHandle: TCallableDescriptorHandle.() -> CallableDescriptor
+): Collection<TCallableDescriptorHandle> {
+    if (size <= 1) return this
+    val queue = LinkedList<TCallableDescriptorHandle>(this)
+    val result = SmartSet.create<TCallableDescriptorHandle>()
+
+    while (queue.isNotEmpty()) {
+        val nextHandle: TCallableDescriptorHandle = queue.first()
+
+        val conflictedHandles = SmartSet.create<TCallableDescriptorHandle>()
+
+        val overridableGroup =
+                OverridingUtil.extractMembersOverridableInBothWays(nextHandle, queue, descriptorByHandle) { conflictedHandles.add(it) }
+
+        if (overridableGroup.size == 1) {
+            result.add(overridableGroup.single())
+            continue
+        }
+
+        val mostSpecific = OverridingUtil.selectMostSpecificMember(overridableGroup, descriptorByHandle)
+        val mostSpecificDescriptor = mostSpecific.descriptorByHandle()
+
+        overridableGroup.filterNotTo(conflictedHandles) {
+            OverridingUtil.isMoreSpecific(mostSpecificDescriptor, it.descriptorByHandle())
+        }
+
+        if (conflictedHandles.isNotEmpty()) {
+            result.addAll(conflictedHandles)
+        }
+
+        result.add(mostSpecific)
+    }
+    return result
 }

@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.resolve;
 import kotlin.CollectionsKt;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
+import org.jetbrains.annotations.Mutable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.descriptors.*;
@@ -331,7 +332,7 @@ public class OverridingUtil {
         }
     }
 
-    public static boolean isMoreSpecific(@NotNull CallableMemberDescriptor a, @NotNull CallableMemberDescriptor b) {
+    public static boolean isMoreSpecific(@NotNull CallableDescriptor a, @NotNull CallableDescriptor b) {
         KotlinType aReturnType = a.getReturnType();
         KotlinType bReturnType = b.getReturnType();
 
@@ -341,7 +342,7 @@ public class OverridingUtil {
         if (a instanceof SimpleFunctionDescriptor) {
             assert b instanceof SimpleFunctionDescriptor : "b is " + b.getClass();
 
-            return KotlinTypeChecker.DEFAULT.isSubtypeOf(aReturnType, bReturnType);
+            return isReturnTypeMoreSpecific(aReturnType, bReturnType);
         }
         if (a instanceof PropertyDescriptor) {
             assert b instanceof PropertyDescriptor : "b is " + b.getClass();
@@ -353,16 +354,16 @@ public class OverridingUtil {
             }
             else {
                 // both vals or var vs val: val can't be more specific then var
-                return !(!pa.isVar() && pb.isVar()) && KotlinTypeChecker.DEFAULT.isSubtypeOf(aReturnType, bReturnType);
+                return !(!pa.isVar() && pb.isVar()) && isReturnTypeMoreSpecific(aReturnType, bReturnType);
             }
         }
         throw new IllegalArgumentException("Unexpected callable: " + a.getClass());
     }
 
-    private static boolean isMoreSpecificThenAllOf(@NotNull CallableMemberDescriptor candidate, @NotNull Collection<CallableMemberDescriptor> descriptors) {
+    private static boolean isMoreSpecificThenAllOf(@NotNull CallableDescriptor candidate, @NotNull Collection<CallableDescriptor> descriptors) {
         // NB subtyping relation in Kotlin is not transitive in presence of flexible types:
         //  String? <: String! <: String, but not String? <: String
-        for (CallableMemberDescriptor descriptor : descriptors) {
+        for (CallableDescriptor descriptor : descriptors) {
             if (!isMoreSpecific(candidate, descriptor)) {
                 return false;
             }
@@ -370,20 +371,47 @@ public class OverridingUtil {
         return true;
     }
 
-    private static CallableMemberDescriptor selectMostSpecificMemberFromSuper(@NotNull Collection<CallableMemberDescriptor> overridables) {
+    private static boolean isReturnTypeMoreSpecific(KotlinType aReturnType, KotlinType bReturnType) {
+        if (KotlinTypeChecker.DEFAULT.isSubtypeOf(aReturnType, bReturnType)) {
+            return true;
+        }
+
+        return isTypesBasedOnSameIndexTypeParameterOfCallable(aReturnType, bReturnType);
+
+    }
+
+    private static boolean isTypesBasedOnSameIndexTypeParameterOfCallable(KotlinType aReturnType, KotlinType bReturnType) {
+        return aReturnType.getConstructor().getDeclarationDescriptor() instanceof TypeParameterDescriptor
+               && bReturnType.getConstructor().getDeclarationDescriptor() instanceof TypeParameterDescriptor
+               && aReturnType.getConstructor().getDeclarationDescriptor().getContainingDeclaration() instanceof CallableDescriptor
+               && bReturnType.getConstructor().getDeclarationDescriptor().getContainingDeclaration() instanceof CallableDescriptor
+               && ((TypeParameterDescriptor) aReturnType.getConstructor().getDeclarationDescriptor()).getIndex()
+                  == ((TypeParameterDescriptor) bReturnType.getConstructor().getDeclarationDescriptor()).getIndex();
+    }
+
+    @NotNull
+    public static <TCallableMemberHandle> TCallableMemberHandle selectMostSpecificMember(
+            @NotNull Collection<TCallableMemberHandle> overridables,
+            @NotNull Function1<TCallableMemberHandle, CallableDescriptor> descriptorByHandle
+    ) {
         assert !overridables.isEmpty() : "Should have at least one overridable descriptor";
 
         if (overridables.size() == 1) {
             return CollectionsKt.first(overridables);
         }
 
-        Collection<CallableMemberDescriptor> candidates = new ArrayList<CallableMemberDescriptor>(2);
-        CallableMemberDescriptor transitivelyMostSpecific = null;
-        for (CallableMemberDescriptor overridable : overridables) {
-            if (isMoreSpecificThenAllOf(overridable, overridables)) {
+        Collection<TCallableMemberHandle> candidates = new ArrayList<TCallableMemberHandle>(2);
+        List<CallableDescriptor> callableMemberDescriptors = CollectionsKt.map(overridables, descriptorByHandle);
+
+        TCallableMemberHandle transitivelyMostSpecific = CollectionsKt.first(overridables);
+        CallableDescriptor transitivelyMostSpecificDescriptor = descriptorByHandle.invoke(transitivelyMostSpecific);
+
+        for (TCallableMemberHandle overridable : overridables) {
+            CallableDescriptor descriptor = descriptorByHandle.invoke(overridable);
+            if (isMoreSpecificThenAllOf(descriptor, callableMemberDescriptors)) {
                 candidates.add(overridable);
             }
-            if (transitivelyMostSpecific == null || isMoreSpecific(overridable, transitivelyMostSpecific)) {
+            if (isMoreSpecific(descriptor, transitivelyMostSpecificDescriptor)) {
                 transitivelyMostSpecific = overridable;
             }
         }
@@ -395,9 +423,9 @@ public class OverridingUtil {
             return CollectionsKt.first(candidates);
         }
 
-        CallableMemberDescriptor firstNonFlexible = null;
-        for (CallableMemberDescriptor candidate : candidates) {
-            if (firstNonFlexible == null && !FlexibleTypesKt.isFlexible(candidate.getReturnType())) {
+        TCallableMemberHandle firstNonFlexible = null;
+        for (TCallableMemberHandle candidate : candidates) {
+            if (firstNonFlexible == null && !FlexibleTypesKt.isFlexible(descriptorByHandle.invoke(candidate).getReturnType())) {
                 firstNonFlexible = candidate;
             }
         }
@@ -426,7 +454,14 @@ public class OverridingUtil {
         // Should be 'foo(s: String): String'.
         Modality modality = getMinimalModality(effectiveOverridden);
         Visibility visibility = allInvisible ? Visibilities.INVISIBLE_FAKE : Visibilities.INHERITED;
-        CallableMemberDescriptor mostSpecific = selectMostSpecificMemberFromSuper(effectiveOverridden);
+        CallableMemberDescriptor mostSpecific =
+                selectMostSpecificMember(effectiveOverridden,
+                                         new Function1<CallableMemberDescriptor, CallableDescriptor>() {
+                                              @Override
+                                              public CallableMemberDescriptor invoke(CallableMemberDescriptor descriptor) {
+                                                  return descriptor;
+                                              }
+                                         });
         CallableMemberDescriptor fakeOverride =
                 mostSpecific.copy(current, modality, visibility, CallableMemberDescriptor.Kind.FAKE_OVERRIDE, false);
         for (CallableMemberDescriptor descriptor : effectiveOverridden) {
@@ -462,33 +497,60 @@ public class OverridingUtil {
     }
 
     @NotNull
-    private static Collection<CallableMemberDescriptor> extractMembersOverridableInBothWays(
-            @NotNull CallableMemberDescriptor overrider,
-            @NotNull Queue<CallableMemberDescriptor> extractFrom,
-            @NotNull DescriptorSink sink
+    public static <DescriptorHandle> Collection<DescriptorHandle> extractMembersOverridableInBothWays(
+            @NotNull DescriptorHandle overrider,
+            @NotNull @Mutable Collection<DescriptorHandle> extractFrom,
+            @NotNull Function1<DescriptorHandle, CallableDescriptor> descriptorByHandle,
+            @NotNull Function1<DescriptorHandle, Unit> onConflict
     ) {
-        Collection<CallableMemberDescriptor> overridable = new ArrayList<CallableMemberDescriptor>();
+        Collection<DescriptorHandle> overridable = new ArrayList<DescriptorHandle>();
         overridable.add(overrider);
-        for (Iterator<CallableMemberDescriptor> iterator = extractFrom.iterator(); iterator.hasNext(); ) {
-            CallableMemberDescriptor candidate = iterator.next();
+        CallableDescriptor overriderDescriptor = descriptorByHandle.invoke(overrider);
+        for (Iterator<DescriptorHandle> iterator = extractFrom.iterator(); iterator.hasNext(); ) {
+            DescriptorHandle candidate = iterator.next();
+            CallableDescriptor candidateDescriptor = descriptorByHandle.invoke(candidate);
             if (overrider == candidate) {
                 iterator.remove();
                 continue;
             }
 
-            OverrideCompatibilityInfo.Result result1 = DEFAULT.isOverridableBy(candidate, overrider, null).getResult();
-            OverrideCompatibilityInfo.Result result2 = DEFAULT.isOverridableBy(overrider, candidate, null).getResult();
+            OverrideCompatibilityInfo.Result result1 = DEFAULT.isOverridableBy(candidateDescriptor, overriderDescriptor, null).getResult();
+            OverrideCompatibilityInfo.Result result2 = DEFAULT.isOverridableBy(overriderDescriptor, candidateDescriptor, null).getResult();
             if (result1 == OVERRIDABLE && result2 == OVERRIDABLE) {
                 overridable.add(candidate);
                 iterator.remove();
             }
             else if (result1 == CONFLICT || result2 == CONFLICT) {
-                sink.conflict(overrider, candidate);
+                onConflict.invoke(candidate);
                 iterator.remove();
             }
         }
         return overridable;
     }
+
+    @NotNull
+    private static Collection<CallableMemberDescriptor> extractMembersOverridableInBothWays(
+            @NotNull final CallableMemberDescriptor overrider,
+            @NotNull Queue<CallableMemberDescriptor> extractFrom,
+            @NotNull final DescriptorSink sink
+    ) {
+        return extractMembersOverridableInBothWays(overrider, extractFrom,
+                // ID
+                new Function1<CallableMemberDescriptor, CallableDescriptor>() {
+                    @Override
+                    public CallableDescriptor invoke(CallableMemberDescriptor descriptor) {
+                        return descriptor;
+                    }
+                },
+                new Function1<CallableMemberDescriptor, Unit>() {
+                    @Override
+                    public Unit invoke(CallableMemberDescriptor descriptor) {
+                        sink.conflict(overrider, descriptor);
+                        return Unit.INSTANCE;
+                    }
+                });
+    }
+
 
     public static void resolveUnknownVisibilityForMember(
             @NotNull CallableMemberDescriptor memberDescriptor,
