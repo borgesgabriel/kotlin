@@ -89,15 +89,15 @@ public class MultifileClassCodegen(
         val singleSourceFile = if (previouslyCompiledCallables.isNotEmpty()) null else filesWithCallables.singleOrNull()
 
         classBuilder.defineClass(singleSourceFile, Opcodes.V1_6,
-                                 if (state.generateOpenMutlifileClasses) OPEN_FACADE_CLASS_ATTRIBUTES else FACADE_CLASS_ATTRIBUTES,
+                                 if (state.generateOpenMultifileClasses) OPEN_FACADE_CLASS_ATTRIBUTES else FACADE_CLASS_ATTRIBUTES,
                                  facadeClassType.internalName,
                                  null, "java/lang/Object", ArrayUtil.EMPTY_STRING_ARRAY)
         if (singleSourceFile != null) {
             classBuilder.visitSource(singleSourceFile.name, null)
         }
 
-        if (state.generateOpenMutlifileClasses) {
-            generateMutlifileFacadeClassConstructor(classBuilder, originFile)
+        if (state.generateOpenMultifileClasses) {
+            generateMultifileFacadeClassConstructor(classBuilder, originFile)
         }
 
         classBuilder
@@ -157,7 +157,7 @@ public class MultifileClassCodegen(
     }
 
 
-    private fun generateMutlifileFacadeClassConstructor(classBuilder: ClassBuilder, originFile: KtFile?) {
+    private fun generateMultifileFacadeClassConstructor(classBuilder: ClassBuilder, originFile: KtFile?) {
         val mv = classBuilder.newMethod(JvmDeclarationOrigin.NO_ORIGIN, Opcodes.ACC_PUBLIC, "<init>", "()V", null, null)
         val v = InstructionAdapter(mv)
         v.load(0, facadeClassType)
