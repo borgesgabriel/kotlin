@@ -2,6 +2,19 @@ package kotlin
 
 import java.util.*
 
+/**
+ * Returns an array with the specified [size], where each element is calculated by calling the specified
+ * [init] function. The `init` function returns an array element given its index.
+ */
+@library("arrayFromFun")
+public inline fun <reified T> Array(size: Int, init: (Int) -> T): Array<T> = noImpl
+
+/**
+ * Returns an empty array of the specified type [T].
+ */
+public inline fun <reified T> emptyArray(): Array<T> = arrayOfNulls<T>(0) as Array<T>
+
+
 @library
 public fun <T> arrayOf(vararg elements: T): Array<T> = noImpl
 

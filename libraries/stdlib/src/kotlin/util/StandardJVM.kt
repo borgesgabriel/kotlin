@@ -20,6 +20,7 @@ public fun Throwable.printStackTrace(writer: PrintWriter): Unit {
 public fun Throwable.printStackTrace(stream: PrintStream): Unit {
     val jlt = this as java.lang.Throwable
     jlt.printStackTrace(stream)
+    val x = Array<Int>()
 }
 
 /**
