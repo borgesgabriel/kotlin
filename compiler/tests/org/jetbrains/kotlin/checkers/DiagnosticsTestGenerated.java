@@ -13982,6 +13982,12 @@ public class DiagnosticsTestGenerated extends AbstractDiagnosticsTest {
                     doTest(fileName);
                 }
 
+                @TestMetadata("companionObject2.kt")
+                public void testCompanionObject2() throws Exception {
+                    String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/scopes/inheritance/companionObject2.kt");
+                    doTest(fileName);
+                }
+
                 @TestMetadata("companionObjectAfterJava.kt")
                 public void testCompanionObjectAfterJava() throws Exception {
                     String fileName = KotlinTestUtils.navigationMetadata("compiler/testData/diagnostics/tests/scopes/inheritance/companionObjectAfterJava.kt");

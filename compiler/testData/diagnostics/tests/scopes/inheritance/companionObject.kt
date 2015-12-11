@@ -1,13 +1,15 @@
 interface A {
-    companion object {
+    companion object : <!UNRESOLVED_REFERENCE!>A_<!>() {
         fun foo() {}
 
-        class A_
+        open class A_
     }
 }
 
+open class L(val a: Any) {}
+
 open class B {
-    companion object {
+    companion object : L(<!UNRESOLVED_REFERENCE!>bar<!>()) {
         fun bar() {}
 
         class B_
