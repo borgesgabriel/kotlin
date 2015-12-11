@@ -32,7 +32,6 @@ import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import org.jetbrains.kotlin.types.typeUtil.builtIns
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.decapitalizeSmart
 import java.util.*
-import java.util.regex.Pattern
 
 public object KotlinNameSuggester {
     public fun suggestNamesByExpressionAndType(
@@ -237,7 +236,7 @@ public object KotlinNameSuggester {
 
     private fun MutableCollection<String>.addCamelNames(name: String, validator: (String) -> Boolean, startLowerCase: Boolean = true) {
         if (name === "") return
-        var s = deleteNonLetterFromString(name)
+        var s = extractIdentifiers(name)
 
         for (prefix in ACCESSOR_PREFIXES) {
             if (!s.startsWith(prefix)) continue
@@ -268,10 +267,17 @@ public object KotlinNameSuggester {
         }
     }
 
-    private fun deleteNonLetterFromString(s: String): String {
-        val pattern = Pattern.compile("[^a-zA-Z]")
-        val matcher = pattern.matcher(s)
-        return matcher.replaceAll("")
+    private fun extractIdentifiers(s: String): String {
+        return buildString {
+            val lexer = KotlinLexer()
+            lexer.start(s)
+            while (lexer.tokenType != null) {
+                if (lexer.tokenType == KtTokens.IDENTIFIER) {
+                    append(lexer.tokenText)
+                }
+                lexer.advance()
+            }
+        }
     }
 
     private fun MutableCollection<String>.addNamesByExpressionPSI(expression: KtExpression?, validator: (String) -> Boolean) {
